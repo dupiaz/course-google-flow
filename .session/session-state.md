@@ -3,8 +3,8 @@
 # Đọc file này ĐẦU TIÊN khi bắt đầu session mới.
 
 project: "course-google-flow"
-last_session: 9
-last_updated: "2026-03-19T00:30:00+07:00"
+last_session: 10
+last_updated: "2026-03-19T00:45:00+07:00"
 
 # --- Progress ---
 completed:
@@ -46,13 +46,24 @@ completed:
   - "Dockerfile: DOCKER_BUILD=1 env var"
   - "docker-compose.yml: env_file .env.local (optional)"
   - "@supabase/supabase-js installed"
+  - "@supabase/ssr installed (cookie-based auth)"
+  - "Supabase Auth: browser/server clients, middleware session refresh"
+  - "Login page (/login): email/password login + signup"
+  - "Auth routes: /auth/confirm (email verification), /auth/signout"
+  - "profiles table + handle_new_user trigger (auto-create profile on signup)"
+  - "Admin RLS policies: admin can INSERT/UPDATE/DELETE on modules/lessons/resources"
+  - "Admin Panel (/admin): dashboard + lesson/resource editors"
+  - "Sidebar: auth state display (avatar, email, login/logout), admin link for admins"
+  - "Vercel deployed: https://web-app-blue-zeta.vercel.app"
+  - "GitHub auto-deploy connected (main branch → Vercel)"
+  - "Production verified: /api/health OK, supabase=true, modules=6"
 
 in_progress: "none"
 
 remaining:
-  - "Deploy lên Vercel (manual: kết nối GitHub, set env vars)"
-  - "Auth (Supabase) + Admin Panel"
   - "Custom domain (optional)"
+  - "Google OAuth (optional)"
+  - "Email templates customization"
 
 # --- Style Guide (bất biến qua sessions) ---
 style:
