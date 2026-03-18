@@ -4,12 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { modules, resources, getAllPages } from "@/lib/course-data";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [completedPages, setCompletedPages] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Load progress from localStorage
   useEffect(() => {
@@ -22,6 +26,36 @@ export default function Sidebar() {
     } catch {
       // Ignored
     }
+  }, []);
+
+  // Check auth state
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            setIsAdmin(data?.is_admin ?? false);
+          });
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Auto-expand the active module
@@ -152,6 +186,21 @@ export default function Sidebar() {
               </Link>
             );
           })}
+
+          {/* Admin link */}
+          {isAdmin && (
+            <>
+              <div className="sidebar-section-title" style={{ marginTop: "0.5rem" }}>
+                Quản trị
+              </div>
+              <Link
+                href="/admin"
+                className={`sidebar-item ${pathname.startsWith("/admin") ? "active" : ""}`}
+              >
+                <span>⚙️ Admin Panel</span>
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Progress */}
@@ -166,6 +215,31 @@ export default function Sidebar() {
               style={{ width: `${progressPercent}%` }}
             />
           </div>
+        </div>
+
+        {/* Auth */}
+        <div className="sidebar-auth">
+          {user ? (
+            <div className="sidebar-user">
+              <div className="sidebar-user-info">
+                <div className="sidebar-user-avatar">
+                  {user.email?.charAt(0).toUpperCase()}
+                </div>
+                <span className="sidebar-user-email" title={user.email ?? ""}>
+                  {user.email}
+                </span>
+              </div>
+              <form action="/auth/signout" method="post">
+                <button type="submit" className="sidebar-auth-btn logout">
+                  Đăng xuất
+                </button>
+              </form>
+            </div>
+          ) : (
+            <Link href="/login" className="sidebar-auth-btn login">
+              🔐 Đăng nhập
+            </Link>
+          )}
         </div>
       </aside>
     </>
