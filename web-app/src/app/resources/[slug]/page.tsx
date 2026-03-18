@@ -7,6 +7,9 @@ import ProgressTracker from "@/components/progress-tracker";
 import PageNavigation from "@/components/page-navigation";
 import Link from "next/link";
 
+/** ISR: revalidate every 5 minutes */
+export const revalidate = 300;
+
 interface PageProps {
   params: Promise<{
     slug: string;
@@ -42,7 +45,7 @@ export default async function ResourcePage({ params }: PageProps) {
 
   let content;
   try {
-    content = await getResourceContent(res.filename);
+    content = await getResourceContent(res.slug);
   } catch {
     notFound();
   }

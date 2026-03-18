@@ -1,3 +1,6 @@
+import { isSupabaseConfigured, supabase } from "./supabase";
+
+// --- Filesystem fallback (for Docker dev without Supabase) ---
 import fs from "fs";
 import path from "path";
 import { unified } from "unified";
@@ -8,14 +11,26 @@ import rehypeStringify from "rehype-stringify";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 
-/** Base directory for course content */
-const CONTENT_DIR = path.join(process.cwd(), "content");
+/** Base directory for course content (project root, one level above web-app/) */
+const CONTENT_DIR = process.env.CONTENT_DIR || path.resolve(process.cwd(), "..");
 
-/**
- * Read and render a markdown file to HTML.
- * @param relativePath - path relative to content directory, e.g. "module-01-nen-tang/bai-hoc.md"
- */
-export async function getMarkdownContent(relativePath: string): Promise<{
+// =============================================
+// Filesystem fallback functions
+// =============================================
+
+async function renderMarkdownToHtml(raw: string): Promise<string> {
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeSlug)
+    .use(rehypeHighlight, { detect: true })
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .process(raw);
+  return String(result);
+}
+
+async function getMarkdownContentFromFile(relativePath: string): Promise<{
   html: string;
   raw: string;
 }> {
@@ -26,42 +41,97 @@ export async function getMarkdownContent(relativePath: string): Promise<{
   }
 
   const raw = fs.readFileSync(fullPath, "utf-8");
+  const html = await renderMarkdownToHtml(raw);
 
-  const result = await unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeSlug)
-    .use(rehypeHighlight, { detect: true })
-    .use(rehypeStringify, { allowDangerousHtml: true })
-    .process(raw);
+  return { html, raw };
+}
+
+// =============================================
+// Supabase query functions
+// =============================================
+
+async function getModuleContentFromSupabase(
+  moduleSlug: string,
+  lessonSlug: string
+): Promise<{ html: string; raw: string }> {
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("content_html, content_md, modules!inner(slug)")
+    .eq("modules.slug", moduleSlug)
+    .eq("slug", lessonSlug)
+    .single();
+
+  if (error || !data) {
+    throw new Error(
+      `Lesson not found: ${moduleSlug}/${lessonSlug} — ${error?.message}`
+    );
+  }
 
   return {
-    html: String(result),
-    raw,
+    html: data.content_html,
+    raw: data.content_md,
   };
 }
+
+async function getResourceContentFromSupabase(
+  slug: string
+): Promise<{ html: string; raw: string }> {
+  const { data, error } = await supabase
+    .from("resources")
+    .select("content_html, content_md")
+    .eq("slug", slug)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Resource not found: ${slug} — ${error?.message}`);
+  }
+
+  return {
+    html: data.content_html,
+    raw: data.content_md,
+  };
+}
+
+// =============================================
+// Public API (dual-mode: Supabase → filesystem fallback)
+// =============================================
 
 /**
  * Get content for a module lesson.
  * @param moduleSlug - e.g. "01-nen-tang"
- * @param lessonFilename - e.g. "bai-hoc.md"
+ * @param lessonSlug - e.g. "bai-hoc"
  */
-export async function getModuleContent(moduleSlug: string, lessonFilename: string) {
-  const relativePath = `module-${moduleSlug}/${lessonFilename}`;
-  return getMarkdownContent(relativePath);
+export async function getModuleContent(
+  moduleSlug: string,
+  lessonSlug: string
+): Promise<{ html: string; raw: string }> {
+  if (isSupabaseConfigured()) {
+    return getModuleContentFromSupabase(moduleSlug, lessonSlug);
+  }
+  // Filesystem fallback: need to map lessonSlug → filename
+  // Convention: slug IS the filename without .md extension
+  const filename = `${lessonSlug}.md`;
+  const relativePath = `module-${moduleSlug}/${filename}`;
+  return getMarkdownContentFromFile(relativePath);
 }
 
 /**
  * Get content for a resource page.
- * @param filename - e.g. "glossary.md"
+ * @param slug - e.g. "glossary"
  */
-export async function getResourceContent(filename: string) {
+export async function getResourceContent(
+  slug: string
+): Promise<{ html: string; raw: string }> {
+  if (isSupabaseConfigured()) {
+    return getResourceContentFromSupabase(slug);
+  }
+  // Filesystem fallback: slug → filename
+  const filename = `${slug}.md`;
   const relativePath = `resources/${filename}`;
-  return getMarkdownContent(relativePath);
+  return getMarkdownContentFromFile(relativePath);
 }
 
-/** Check if a content file exists */
+/** Check if a content file exists (filesystem fallback only) */
 export function contentFileExists(relativePath: string): boolean {
   const fullPath = path.join(CONTENT_DIR, relativePath);
   return fs.existsSync(fullPath);

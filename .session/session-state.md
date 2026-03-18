@@ -3,8 +3,8 @@
 # Đọc file này ĐẦU TIÊN khi bắt đầu session mới.
 
 project: "course-google-flow"
-last_session: 7
-last_updated: "2026-03-18T16:45:00+07:00"
+last_session: 9
+last_updated: "2026-03-19T00:30:00+07:00"
 
 # --- Progress ---
 completed:
@@ -30,12 +30,29 @@ completed:
   - "resources/prompt-library.md (tổng hợp prompt từ M2/M3/M5/M6, templates tái sử dụng, mẹo)"
   - "resources/checklist.md (checklist per-module + checklist tuân thủ chung)"
   - "resources/links.md (Google Flow, TikTok, tools, tài nguyên khóa học)"
+  - "web-app MVP: Next.js 16 + Docker, đọc markdown tĩnh, sidebar + progress + dark/light mode + responsive"
+  - "web-app/docker-compose.yml (dev service mount project root)"
+  - "web-app/Dockerfile (multi-stage, copy content from project root)"
+  - "Kiến trúc đánh giá: Vercel free + Supabase free (phục vụ ~10K MAU, $0/tháng)"
+  - "Supabase PostgreSQL: schema 3 bảng (modules, lessons, resources) + RLS anonymous read + indexes"
+  - "Seed data: 6 modules, 13 lessons, 4 resources → Supabase (pre-rendered HTML)"
+  - "content.ts dual-mode: Supabase query (production) / filesystem fallback (Docker dev)"
+  - "supabase.ts: server-side Supabase client"
+  - "ISR caching: revalidate=300 (5 phút) trên tất cả pages"
+  - "API health check: /api/health ping Supabase keep-alive"
+  - "vercel.json: cron /api/health mỗi 3 ngày"
+  - "next.config.ts: conditional standalone output (Docker only)"
+  - ".env.local.example + .env.local (Supabase credentials)"
+  - "Dockerfile: DOCKER_BUILD=1 env var"
+  - "docker-compose.yml: env_file .env.local (optional)"
+  - "@supabase/supabase-js installed"
 
-in_progress: "none (all 6 modules + resources completed)"
+in_progress: "none"
 
 remaining:
-  - "Web App (Next.js)"
-  - "Deploy (Vercel)"
+  - "Deploy lên Vercel (manual: kết nối GitHub, set env vars)"
+  - "Auth (Supabase) + Admin Panel"
+  - "Custom domain (optional)"
 
 # --- Style Guide (bất biến qua sessions) ---
 style:
@@ -236,28 +253,17 @@ research:
 
 # --- Next Session ---
 next:
-  session_number: 8
-  scope: "Tạo Web App (Next.js) để hiển thị khóa học"
-  files_to_create:
-    - "Web App Next.js project (Dockerfile, docker-compose.yml, pages, components)"
+  session_number: 10
+  scope: "Deploy Vercel + Auth Supabase"
   files_to_read_first:
     - ".session/session-state.md"
-    - "README.md"
   skills_to_use:
-    - "optimized-nextjs-typescript"
     - "vercel-deployment"
-  prompt: |
-    Tiếp tục dự án khóa học Google Flow TikTok Affiliate.
+    - "optimized-nextjs-typescript"
+  tasks:
+    - "Deploy lên Vercel: kết nối GitHub repo, set env vars (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)"
+    - "Verify production: tất cả trang load, /api/health trả OK, cron job active"
+    - "Supabase Auth: đăng nhập/đăng ký (email/password hoặc Google OAuth)"
+    - "Admin Panel: trang quản lý content, chỉ admin mới truy cập được"
+    - "Cập nhật session-state.md"
 
-    BƯỚC 1: Đọc file `.session/session-state.md` để nắm toàn bộ context.
-    BƯỚC 2: Đọc README.md để hiểu cấu trúc dự án.
-
-    NHIỆM VỤ SESSION NÀY:
-    Tạo Web App (Next.js + TypeScript) để hiển thị toàn bộ nội dung khóa học:
-    1. Thiết kế UI/UX đẹp, responsive, dark mode
-    2. Render markdown content từ các module + resources
-    3. Navigation sidebar với progress tracking
-    4. Tạo Dockerfile + docker-compose.yml cho development
-    5. SEO-ready, performance-optimized
-
-    Sau khi hoàn thành, CẬP NHẬT session-state.md.

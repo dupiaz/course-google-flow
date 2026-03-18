@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  // Enable static export for markdown content
+  // Use standalone output only for Docker builds
+  ...(process.env.DOCKER_BUILD ? { output: "standalone" } : {}),
   images: {
     unoptimized: true,
   },
