@@ -264,17 +264,29 @@ research:
 
 # --- Next Session ---
 next:
-  session_number: 10
-  scope: "Deploy Vercel + Auth Supabase"
+  session_number: 11
+  scope: "Production Polish + User Features"
   files_to_read_first:
     - ".session/session-state.md"
   skills_to_use:
     - "vercel-deployment"
     - "optimized-nextjs-typescript"
+    - "supabase-postgres-best-practices"
+  tools_available:
+    - "Vercel CLI (đã cài đặt, đã login)"
+    - "Supabase MCP (apply_migration, execute_sql, deploy_edge_function, get_logs, get_advisors...)"
+    - "GitHub CLI (push/pull từ main → auto-deploy Vercel)"
+  production_url: "https://web-app-blue-zeta.vercel.app"
   tasks:
-    - "Deploy lên Vercel: kết nối GitHub repo, set env vars (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)"
-    - "Verify production: tất cả trang load, /api/health trả OK, cron job active"
-    - "Supabase Auth: đăng nhập/đăng ký (email/password hoặc Google OAuth)"
-    - "Admin Panel: trang quản lý content, chỉ admin mới truy cập được"
-    - "Cập nhật session-state.md"
-
+    - "User progress sync: lưu tiến độ học vào Supabase (thay vì localStorage), tạo bảng user_progress + RLS"
+    - "User profile page (/profile): hiển thị thông tin, thống kê tiến độ, đổi tên"
+    - "Custom domain: vercel domains add (nếu user cung cấp domain)"
+    - "Login page UX: hiển thị error/success messages từ query params, loading states"
+    - "Error pages: custom 404, error boundary cho admin panel"
+    - "SEO optimization: dynamic OG images, sitemap.xml, robots.txt"
+    - "Supabase security audit: chạy get_advisors, fix warnings"
+    - "Performance: analyze build size, optimize imports"
+  notes:
+    - "Google OAuth: CẦN user tạo OAuth credentials trên Google Cloud Console trước → cung cấp Client ID + Client Secret"
+    - "Email templates: CẦN user tùy chỉnh trên Supabase Dashboard (Authentication → Email Templates)"
+    - "Admin account: user cần tạo tài khoản + chạy SQL: UPDATE profiles SET is_admin = true WHERE email = '...'"
