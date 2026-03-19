@@ -1,12 +1,31 @@
-import { Metadata } from "next";
+"use client";
+
+import { useSearchParams } from "next/navigation";
 import { login, signup } from "./actions";
+import { Suspense, useState, useTransition } from "react";
 
-export const metadata: Metadata = {
-  title: "Đăng nhập | Google Flow Course",
-  description: "Đăng nhập hoặc tạo tài khoản để quản lý khóa học",
-};
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const errorMsg = searchParams.get("error");
+  const successMsg = searchParams.get("message");
 
-export default function LoginPage() {
+  const [isPendingLogin, startLoginTransition] = useTransition();
+  const [isPendingSignup, startSignupTransition] = useTransition();
+
+  const isPending = isPendingLogin || isPendingSignup;
+
+  const handleLogin = (formData: FormData) => {
+    startLoginTransition(async () => {
+      await login(formData);
+    });
+  };
+
+  const handleSignup = (formData: FormData) => {
+    startSignupTransition(async () => {
+      await signup(formData);
+    });
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -17,6 +36,18 @@ export default function LoginPage() {
             Truy cập tài khoản để quản lý nội dung khóa học
           </p>
         </div>
+
+        {/* Messages */}
+        {errorMsg && (
+          <div className="login-alert login-alert-error">
+            ❌ {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="login-alert login-alert-success">
+            ✅ {successMsg}
+          </div>
+        )}
 
         <form className="login-form">
           <div className="form-group">
@@ -30,6 +61,7 @@ export default function LoginPage() {
               required
               placeholder="you@example.com"
               className="form-input"
+              disabled={isPending}
             />
           </div>
 
@@ -45,15 +77,24 @@ export default function LoginPage() {
               minLength={6}
               placeholder="Tối thiểu 6 ký tự"
               className="form-input"
+              disabled={isPending}
             />
           </div>
 
           <div className="login-actions">
-            <button formAction={login} className="btn btn-primary">
-              Đăng nhập
+            <button
+              formAction={handleLogin}
+              className="btn btn-primary"
+              disabled={isPending}
+            >
+              {isPendingLogin ? "⏳ Đang đăng nhập..." : "Đăng nhập"}
             </button>
-            <button formAction={signup} className="btn btn-secondary">
-              Tạo tài khoản
+            <button
+              formAction={handleSignup}
+              className="btn btn-secondary"
+              disabled={isPending}
+            >
+              {isPendingSignup ? "⏳ Đang tạo..." : "Tạo tài khoản"}
             </button>
           </div>
         </form>
@@ -64,5 +105,25 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="login-container">
+          <div className="login-card">
+            <div className="login-header">
+              <div className="login-icon">🔐</div>
+              <h1 className="login-title">Đăng nhập</h1>
+              <p className="login-subtitle">Đang tải...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

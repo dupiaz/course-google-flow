@@ -4,6 +4,9 @@ import Sidebar from "@/components/sidebar";
 import ThemeToggle from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://web-app-blue-zeta.vercel.app"
+  ),
   title: "Google Flow — Khóa học TikTok Affiliate",
   description:
     "Khóa học hướng dẫn từ con số 0 đến khả năng tự sản xuất video affiliate chuyên nghiệp bằng Google Flow — nền tảng AI video của Google — và kiếm tiền trên TikTok Shop.",

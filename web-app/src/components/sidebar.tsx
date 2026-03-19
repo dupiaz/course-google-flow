@@ -15,25 +15,38 @@ export default function Sidebar() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Load progress from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("course-progress");
-      if (saved) {
-        const data = JSON.parse(saved);
-        setCompletedPages(data.completedPages || []);
+  // Load progress: Supabase for logged-in, localStorage for anonymous
+  const loadProgress = useCallback(
+    async (currentUser: User | null) => {
+      if (currentUser) {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("user_progress")
+          .select("page_path")
+          .eq("user_id", currentUser.id);
+        setCompletedPages(data?.map((r) => r.page_path) ?? []);
+      } else {
+        try {
+          const saved = localStorage.getItem("course-progress");
+          if (saved) {
+            const data = JSON.parse(saved);
+            setCompletedPages(data.completedPages || []);
+          }
+        } catch {
+          // Ignored
+        }
       }
-    } catch {
-      // Ignored
-    }
-  }, []);
+    },
+    []
+  );
 
-  // Check auth state
+  // Check auth state + load progress
   useEffect(() => {
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
+      loadProgress(user);
       if (user) {
         supabase
           .from("profiles")
@@ -49,14 +62,28 @@ export default function Sidebar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (!session?.user) {
+      const newUser = session?.user ?? null;
+      setUser(newUser);
+      loadProgress(newUser);
+      if (!newUser) {
         setIsAdmin(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadProgress]);
+
+  // Listen for progress-updated events
+  useEffect(() => {
+    const handler = () => loadProgress(user);
+    window.addEventListener("progress-updated", handler);
+    // Also listen for localStorage changes (anonymous)
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("progress-updated", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, [user, loadProgress]);
 
   // Auto-expand the active module
   useEffect(() => {
@@ -84,7 +111,8 @@ export default function Sidebar() {
   const allPages = getAllPages();
   const totalPages = allPages.length;
   const completedCount = completedPages.length;
-  const progressPercent = totalPages > 0 ? Math.round((completedCount / totalPages) * 100) : 0;
+  const progressPercent =
+    totalPages > 0 ? Math.round((completedCount / totalPages) * 100) : 0;
 
   return (
     <>
@@ -111,7 +139,9 @@ export default function Sidebar() {
             <div className="sidebar-logo-icon">🎓</div>
             <div>
               <div className="sidebar-logo-text">Google Flow</div>
-              <div className="sidebar-logo-subtitle">TikTok Affiliate Course</div>
+              <div className="sidebar-logo-subtitle">
+                TikTok Affiliate Course
+              </div>
             </div>
           </Link>
         </div>
@@ -162,7 +192,10 @@ export default function Sidebar() {
             );
           })}
 
-          <div className="sidebar-section-title" style={{ marginTop: "0.5rem" }}>
+          <div
+            className="sidebar-section-title"
+            style={{ marginTop: "0.5rem" }}
+          >
             Tài liệu bổ trợ
           </div>
 
@@ -190,7 +223,10 @@ export default function Sidebar() {
           {/* Admin link */}
           {isAdmin && (
             <>
-              <div className="sidebar-section-title" style={{ marginTop: "0.5rem" }}>
+              <div
+                className="sidebar-section-title"
+                style={{ marginTop: "0.5rem" }}
+              >
                 Quản trị
               </div>
               <Link
@@ -229,11 +265,16 @@ export default function Sidebar() {
                   {user.email}
                 </span>
               </div>
-              <form action="/auth/signout" method="post">
-                <button type="submit" className="sidebar-auth-btn logout">
-                  Đăng xuất
-                </button>
-              </form>
+              <div className="sidebar-user-actions">
+                <Link href="/profile" className="sidebar-profile-link">
+                  👤 Hồ sơ
+                </Link>
+                <form action="/auth/signout" method="post">
+                  <button type="submit" className="sidebar-auth-btn logout">
+                    Đăng xuất
+                  </button>
+                </form>
+              </div>
             </div>
           ) : (
             <Link href="/login" className="sidebar-auth-btn login">
