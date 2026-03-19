@@ -3,8 +3,8 @@
 # Đọc file này ĐẦU TIÊN khi bắt đầu session mới.
 
 project: "course-google-flow"
-last_session: 10
-last_updated: "2026-03-19T00:45:00+07:00"
+last_session: 11
+last_updated: "2026-03-19T13:10:00+07:00"
 
 # --- Progress ---
 completed:
@@ -57,13 +57,24 @@ completed:
   - "Vercel deployed: https://web-app-blue-zeta.vercel.app"
   - "GitHub auto-deploy connected (main branch → Vercel)"
   - "Production verified: /api/health OK, supabase=true, modules=6"
+  - "user_progress table + RLS (user chỉ thấy progress của mình)"
+  - "progress-tracker.tsx: dual-mode Supabase (logged-in) / localStorage (anonymous)"
+  - "sidebar.tsx: đọc progress từ Supabase, auto-sync, profile link"
+  - "Profile page (/profile): thông tin user, stats tiến độ, per-module breakdown, đổi tên"
+  - "Login page UX: error/success messages từ URL params, loading states"
+  - "Custom 404 page (not-found.tsx)"
+  - "Error boundaries: global (error.tsx) + admin (admin/error.tsx)"
+  - "SEO: sitemap.ts (dynamic), robots.ts, opengraph-image.tsx (edge)"
+  - "layout.tsx: metadataBase cho OG URL resolution"
+  - "CSS: login alerts, profile page, error pages, disabled states"
+  - "Supabase security audit: 0 warnings (sạch)"
 
 in_progress: "none"
 
 remaining:
-  - "Custom domain (optional)"
-  - "Google OAuth (optional)"
-  - "Email templates customization"
+  - "Custom domain (optional — cần user cung cấp domain)"
+  - "Google OAuth (cần user tạo OAuth credentials trên Google Cloud Console)"
+  - "Email templates customization (user tùy chỉnh trên Supabase Dashboard)"
 
 # --- Style Guide (bất biến qua sessions) ---
 style:
@@ -264,29 +275,17 @@ research:
 
 # --- Next Session ---
 next:
-  session_number: 11
-  scope: "Production Polish + User Features"
+  session_number: 12
+  scope: "Google OAuth + Custom domain + Email templates + Analytics"
   files_to_read_first:
     - ".session/session-state.md"
-  skills_to_use:
-    - "vercel-deployment"
-    - "optimized-nextjs-typescript"
-    - "supabase-postgres-best-practices"
-  tools_available:
-    - "Vercel CLI (đã cài đặt, đã login)"
-    - "Supabase MCP (apply_migration, execute_sql, deploy_edge_function, get_logs, get_advisors...)"
-    - "GitHub CLI (push/pull từ main → auto-deploy Vercel)"
-  production_url: "https://web-app-blue-zeta.vercel.app"
   tasks:
-    - "User progress sync: lưu tiến độ học vào Supabase (thay vì localStorage), tạo bảng user_progress + RLS"
-    - "User profile page (/profile): hiển thị thông tin, thống kê tiến độ, đổi tên"
-    - "Custom domain: vercel domains add (nếu user cung cấp domain)"
-    - "Login page UX: hiển thị error/success messages từ query params, loading states"
-    - "Error pages: custom 404, error boundary cho admin panel"
-    - "SEO optimization: dynamic OG images, sitemap.xml, robots.txt"
-    - "Supabase security audit: chạy get_advisors, fix warnings"
-    - "Performance: analyze build size, optimize imports"
+    - "Google OAuth integration (cần Client ID + Client Secret từ Google Cloud Console)"
+    - "Custom domain setup (cần user cung cấp domain)"
+    - "Email templates customization hướng dẫn"
+    - "Analytics: dùng Vercel Analytics hoặc Plausible"
+    - "Performance monitoring: Core Web Vitals"
   notes:
-    - "Google OAuth: CẦN user tạo OAuth credentials trên Google Cloud Console trước → cung cấp Client ID + Client Secret"
-    - "Email templates: CẦN user tùy chỉnh trên Supabase Dashboard (Authentication → Email Templates)"
+    - "Google OAuth: CẦN user tạo OAuth credentials trước"
+    - "Custom domain: CẦN user cung cấp domain name"
     - "Admin account: user cần tạo tài khoản + chạy SQL: UPDATE profiles SET is_admin = true WHERE email = '...'"
